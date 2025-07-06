@@ -19,7 +19,7 @@ void get_URL( const string& host, const string& path )
                        "\r\n" );
   string s;
   TCPSocket sock;
-  sock.connect( Address( host, "http" ) );
+  sock.connect(Address( host, "http" ));
   sock.write( lines );
   while ( !sock.eof() ) {
     sock.read( s );

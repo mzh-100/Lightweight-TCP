@@ -1,6 +1,15 @@
 #pragma once
-
+#include <unordered_map>
 #include "byte_stream.hh"
+
+typedef struct packed_string{
+  uint64_t first_index;
+  std::string data;
+  bool is_last_substring;
+
+  packed_string( uint64_t first_index_, std::string data_, bool is_last_substring_ )
+      : first_index( first_index_ ), data( std::move( data_ ) ), is_last_substring( is_last_substring_ ) {}
+}packed_string;
 
 class Reassembler
 {
@@ -29,7 +38,7 @@ public:
    * The Reassembler should close the stream after writing the last byte.
    */
   void insert( uint64_t first_index, std::string data, bool is_last_substring );
-
+  bool isOverlap( );
   // How many bytes are stored in the Reassembler itself?
   // This function is for testing only; don't add extra state to support it.
   uint64_t count_bytes_pending() const;
@@ -43,4 +52,7 @@ public:
 
 private:
   ByteStream output_;
+  uint64_t unpopped_index {};
+  uint64_t next_index {}; 
+  std::unordered_map<uint64_t, packed_string> pending_strings {};
 };
