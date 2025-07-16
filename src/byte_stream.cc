@@ -26,9 +26,7 @@ void Writer::push( string data )
       size_ += available;
     }
   }
-  // if(!available_capacity()) {
-  //   close(); // If no capacity left, mark as closed.
-  // }
+  
 }
 
 void Writer::close()

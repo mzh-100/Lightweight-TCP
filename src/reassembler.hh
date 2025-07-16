@@ -1,6 +1,9 @@
 #pragma once
 #include <unordered_map>
+#include <map>
+#include <vector>
 #include "byte_stream.hh"
+#define MAXINT 2^63
 
 typedef struct packed_string{
   uint64_t first_index;
@@ -15,7 +18,8 @@ class Reassembler
 {
 public:
   // Construct Reassembler to write into given ByteStream.
-  explicit Reassembler( ByteStream&& output ) : output_( std::move( output ) ) {}
+  explicit Reassembler( ByteStream&& output ) : output_( std::move( output ) ) {
+  }
 
   /*
    * Insert a new substring to be reassembled into a ByteStream.
@@ -52,7 +56,10 @@ public:
 
 private:
   ByteStream output_;
-  uint64_t unpopped_index {};
   uint64_t next_index {}; 
-  std::unordered_map<uint64_t, packed_string> pending_strings {};
+  std::map<uint64_t, packed_string> pending_strings {};
+  
+  // 辅助函数
+  void write_to_stream(Writer& writer, std::string& data, bool is_last_substring);
+  bool handleOverlap(std::string& data, uint64_t first_index);
 };
