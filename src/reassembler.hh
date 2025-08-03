@@ -1,24 +1,13 @@
 #pragma once
-#include <unordered_map>
-#include <map>
-#include <vector>
+#include <string>
+#include <deque>
 #include "byte_stream.hh"
-#define MAXINT 2^63
-
-typedef struct packed_string{
-  uint64_t first_index;
-  std::string data;
-  bool is_last_substring;
-
-  packed_string( uint64_t first_index_, std::string data_, bool is_last_substring_ )
-      : first_index( first_index_ ), data( std::move( data_ ) ), is_last_substring( is_last_substring_ ) {}
-}packed_string;
 
 class Reassembler
 {
 public:
   // Construct Reassembler to write into given ByteStream.
-  explicit Reassembler( ByteStream&& output ) : output_( std::move( output ) ) {
+  explicit Reassembler( ByteStream&& output ) : output_( std::move( output ) ), _capacity( output_.writer().available_capacity() ), buffer(_capacity, '\0'), _flag(_capacity, false) {
   }
 
   /*
@@ -42,7 +31,7 @@ public:
    * The Reassembler should close the stream after writing the last byte.
    */
   void insert( uint64_t first_index, std::string data, bool is_last_substring );
-  bool isOverlap( );
+
   // How many bytes are stored in the Reassembler itself?
   // This function is for testing only; don't add extra state to support it.
   uint64_t count_bytes_pending() const;
@@ -56,10 +45,10 @@ public:
 
 private:
   ByteStream output_;
-  uint64_t next_index {}; 
-  std::map<uint64_t, packed_string> pending_strings {};
-  
-  // 辅助函数
-  void write_to_stream(Writer& writer, std::string& data, bool is_last_substring);
-  bool handleOverlap(std::string& data, uint64_t first_index);
+  size_t _capacity;
+  std::deque<char> buffer;
+  std::deque<bool> _flag;
+  bool _is_eof = false;
+  uint64_t _eof_index = 0;
+  uint64_t _unassembled_bytes = 0;
 };
