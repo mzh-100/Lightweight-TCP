@@ -8,12 +8,27 @@
 
 class TCPSender
 {
-public:
+  public:
   /* Construct TCP sender with given default Retransmission Timeout and possible ISN */
   TCPSender( ByteStream&& input, Wrap32 isn, uint64_t initial_RTO_ms )
-    : input_( std::move( input ) ), isn_( isn ), initial_RTO_ms_( initial_RTO_ms )
-  {}
-
+    : input_( std::move( input ) )
+    , isn_( isn )
+    , initial_RTO_ms_( initial_RTO_ms )
+    , isSent_ISN( 0 )
+    , isSent_FIN( 0 )
+    , cur_RTO_ms( initial_RTO_ms )
+    , is_start_timer( 0 )
+    , received_msg()
+    , abs_seqno( 0 )
+    , primitive_window_size( 1 )
+    , outstanding_collections()
+    , outstanding_bytes( 0 )
+    , consecutive_retransmissions_nums( 0 )
+  {
+    received_msg.ackno = isn_;
+    received_msg.window_size = 1;
+  }
+  
   /* Generate an empty TCPSenderMessage */
   TCPSenderMessage make_empty_message() const;
 
@@ -35,11 +50,24 @@ public:
   const Writer& writer() const { return input_.writer(); }
   const Reader& reader() const { return input_.reader(); }
   Writer& writer() { return input_.writer(); }
-
-private:
   Reader& reader() { return input_.reader(); }
-
+  
+  void set_error() { _has_error = true; }
+  bool has_error() const { return _has_error; }
+  
+  private:
   ByteStream input_;
   Wrap32 isn_;
   uint64_t initial_RTO_ms_;
+  bool isSent_ISN;
+  bool isSent_FIN;
+  uint64_t cur_RTO_ms;
+  bool is_start_timer;
+  TCPReceiverMessage received_msg;
+  uint64_t abs_seqno;
+  uint16_t primitive_window_size;
+  std::deque<TCPSenderMessage> outstanding_collections;
+  uint64_t outstanding_bytes;
+  uint64_t consecutive_retransmissions_nums;
+  bool _has_error = false;  
 };
